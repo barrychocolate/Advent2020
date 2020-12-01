@@ -1,13 +1,68 @@
 ---
-title: "Day 1"
-output: html_notebook
+title: "Advent of Code 2020"
+author: "Barry Bullas"
+output:
+  html_document:
+    toc: true
+    toc_float: true
 ---
 
-#Advent of Code
-## Day 1
+[Advent of Code](https://adventofcode.com/2020/about) is an Advent calendar of small programming puzzles for a variety of skill sets and skill levels that can be solved in any programming language you like. 
 
+## Day 1: Report Repair
+Before you leave, the Elves in accounting just need you to fix your expense report (your puzzle input); apparently, something isn't quite adding up.
 
+### Load the data
+Note participants don't always get the same starting dataset so you should replace the day1.txt dataset with your own if you want to work out your answers.
 
 ```{r}
+#Load the data that will be used for Part 1 & Part 2
+#The data can be  downloaded from https://adventofcode.com/2020/day/1/
+
+day1 <- read.csv('data/day1.txt',header = FALSE)
+
+#convert to vector
+day1 <- unlist(day1)
+```
+
+### Part 1
+Specifically, they need you to find the two entries that sum to 2020 and then multiply those two numbers together.
+
+```{r}
+#get all combinations of the numbers
+day1_p1_combinations <- expand.grid(day1, day1)
+
+#Calulate the sum of the two numbers so we can check if it equals 2020
+day1_p1_combinations$agg <- day1_p1_combinations$Var1 + day1_p1_combinations$Var2
+
+#Filter to find those with a sum of 2020
+sum_to_2020_p1 <- day1_p1_combinations[day1_p1_combinations$agg==2020, ]
+
+#Multiply the two numbers to get the answer
+#Only using the first record as the second record has the same numbers but alternated
+answer1 <- sum_to_2020_p1[1,]$Var1 * sum_to_2020_p1[1,]$Var2
 
 ```
+
+The answer to **Part One** is `r answer1`
+
+### Part 2
+
+The Elves in accounting are thankful for your help; one of them even offers you a starfish coin they had left over from a past vacation. They offer you a second one if you can find three numbers in your expense report that meet the same criteria.
+
+```{r}
+#get all combinations of the numbers
+day1_p2_combinations <- expand.grid(day1, day1, day1)
+
+#Calulate the sum of the two numbers so we can check if it equals 2020
+day1_p2_combinations$agg <- day1_p2_combinations$Var1 + day1_p2_combinations$Var2 + day1_p2_combinations$Var3
+
+#Filter to find those with a sum of 2020
+sum_to_2020_p2 <- day1_p2_combinations[day1_p2_combinations$agg==2020, ]
+
+#Multiply the two numbers to get the answer
+#Only using the first record as the second record has the same numbers but alternated
+answer2 <- sum_to_2020_p2[1,]$Var1 * sum_to_2020_p2[1,]$Var2 * sum_to_2020_p2[1,]$Var3
+```
+
+The answer to **Part Two** is `r answer2`
