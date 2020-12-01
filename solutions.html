@@ -1551,13 +1551,21 @@ day1_p1_combinations &lt;- expand.grid(day1, day1)
 #Calulate the sum of the two numbers so we can check if it equals 2020
 day1_p1_combinations$agg &lt;- day1_p1_combinations$Var1 + day1_p1_combinations$Var2
 
+#Remove were the number is paired with itself
+day1_p1_combinations &lt;- day1_p1_combinations[day1_p1_combinations$Var1 != day1_p1_combinations$Var2, ]
+
+#Deduplicate
+day1_p1_combinations &lt;- day1_p1_combinations[day1_p1_combinations$Var1 &lt; day1_p1_combinations$Var2, ]
+
 #Filter to find those with a sum of 2020
 sum_to_2020_p1 &lt;- day1_p1_combinations[day1_p1_combinations$agg==2020, ]
 
 #Multiply the two numbers to get the answer
-#Only using the first record as the second record has the same numbers but alternated
-answer1 &lt;- sum_to_2020_p1[1,]$Var1 * sum_to_2020_p1[1,]$Var2</code></pre>
-<p>The answer to <strong>Part One</strong> is 440979</p>
+answer_d1p1 &lt;- sum_to_2020_p1$Var1 * sum_to_2020_p1$Var2
+
+#remove datasets no longer needed
+rm(day1_p1_combinations, sum_to_2020_p1)</code></pre>
+<p>The answer to <strong>Day 1 Part 1</strong> is 440979</p>
 </div>
 <div id="part-2" class="section level3">
 <h3>Part 2</h3>
@@ -1568,13 +1576,26 @@ day1_p2_combinations &lt;- expand.grid(day1, day1, day1)
 #Calulate the sum of the two numbers so we can check if it equals 2020
 day1_p2_combinations$agg &lt;- day1_p2_combinations$Var1 + day1_p2_combinations$Var2 + day1_p2_combinations$Var3
 
+#Remove were the number is paired with itself
+day1_p2_combinations &lt;- day1_p2_combinations[day1_p2_combinations$Var1 != day1_p2_combinations$Var2, ]
+
+day1_p2_combinations &lt;- day1_p2_combinations[day1_p2_combinations$Var2 != day1_p2_combinations$Var3, ]
+
+#Deduplicate
+day1_p2_combinations &lt;- day1_p2_combinations[day1_p2_combinations$Var1 &lt; day1_p2_combinations$Var2, ]
+
+day1_p2_combinations &lt;- day1_p2_combinations[day1_p2_combinations$Var2 &lt; day1_p2_combinations$Var3, ]
+
 #Filter to find those with a sum of 2020
 sum_to_2020_p2 &lt;- day1_p2_combinations[day1_p2_combinations$agg==2020, ]
 
 #Multiply the two numbers to get the answer
 #Only using the first record as the second record has the same numbers but alternated
-answer2 &lt;- sum_to_2020_p2[1,]$Var1 * sum_to_2020_p2[1,]$Var2 * sum_to_2020_p2[1,]$Var3</code></pre>
-<p>The answer to <strong>Part Two</strong> is 82498112</p>
+answer_d1p2 &lt;- sum_to_2020_p2[1,]$Var1 * sum_to_2020_p2[1,]$Var2 * sum_to_2020_p2[1,]$Var3
+
+#remove datasets no longer needed
+rm(day1_p2_combinations, sum_to_2020_p2, day1)</code></pre>
+<p>The answer to <strong>Day 1 Part 2</strong> is 82498112</p>
 </div>
 </div>
 
