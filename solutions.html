@@ -1717,13 +1717,14 @@ answer_d3p1&lt;-howmanytrees(day3, 1, 3, 1, 31)</code></pre>
 <p>Time to check the rest of the slopes - you need to minimize the probability of a sudden arboreal stop, after all.</p>
 <p>Determine the number of trees you would encounter if, for each of the following slopes, you start at the top-left corner and traverse the map all the way to the bottom:</p>
 <p>Right 1, down 1. Right 3, down 1. (This is the slope you already checked.) Right 5, down 1. Right 7, down 1. Right 1, down 2. In the above example, these slopes would find 2, 7, 3, 4, and 2 tree(s) respectively; multiplied together, these produce the answer 336.</p>
-<pre class="r"><code>r1d1 &lt;- howmanytrees(day3, 1, 1, 1, 31)
+<pre class="r"><code>#Call the function for the Part 2 requirements
+r1d1 &lt;- howmanytrees(day3, 1, 1, 1, 31)
 r3d1 &lt;- howmanytrees(day3, 1, 3, 1, 31)
 r5d1 &lt;- howmanytrees(day3, 1, 5, 1, 31)
 r7d1 &lt;- howmanytrees(day3, 1, 7, 1, 31)
-r1d2 &lt;- howmanytrees(day3, 1, 1, 2, 31) # should be 31 getting 30
+r1d2 &lt;- howmanytrees(day3, 1, 1, 2, 31) 
 
-#multiply the answer together
+#multiply the results together to get the answer to part 2
 answer_d3p2 &lt;- r1d1 * r3d1 * r5d1 * r7d1 * r1d2</code></pre>
 <p>The answer to <strong>Day 3 Part 2</strong> is 3,093,068,400</p>
 </div>
