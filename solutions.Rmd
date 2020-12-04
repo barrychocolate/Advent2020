@@ -61,7 +61,7 @@ sum_to_2020_p1 <- day1_p1_combinations[day1_p1_combinations$agg==2020, ]
 answer_d1p1 <- sum_to_2020_p1$Var1 * sum_to_2020_p1$Var2
 ```
 
-The answer to **Day 1 Part 1** is `r answer_d1p1`
+The answer to **Day 1 Part 1** is `r format(answer_d1p1, nsmall=0, big.mark=",")`
 
 ### Day 1: Part 2
 
@@ -92,7 +92,7 @@ sum_to_2020_p2 <- day1_p2_combinations[day1_p2_combinations$agg==2020, ]
 answer_d1p2 <- sum_to_2020_p2[1,]$Var1 * sum_to_2020_p2[1,]$Var2 * sum_to_2020_p2[1,]$Var3
 ```
 
-The answer to **Day 1 Part 2** is `r answer_d1p2`
+The answer to **Day 1 Part 2** is `r format(answer_d1p2, nsmall=0, big.mark=",")`
 
 ## Day 2: Password Philosophy
 Your flight departs in a few days from the coastal airport; the easiest way down to the coast from here is via toboggan.
@@ -152,7 +152,7 @@ day2_p1_valid <- day2 %>%
 answer_d2p1 <- nrow(day2_p1_valid)
 ```
 
-The answer to **Day 2 Part 1** is `r answer_d2p1`
+The answer to **Day 2 Part 1** is `r format(answer_d2p1, nsmall=0, big.mark=",")`
 
 ### Day 2: Part 2
 While it appears you validated the passwords correctly, they don't seem to be what the Official Toboggan Corporate Authentication System is expecting.
@@ -177,7 +177,7 @@ day2_p2_valid <- day2 %>%
 answer_d2p2 <- nrow(day2_p2_valid)
 ```
 
-The answer to **Day 2 Part 2** is `r answer_d2p2`
+The answer to **Day 2 Part 2** is `r format(answer_d2p2, nsmall=0, big.mark=",")`
 
 ## Day 3: Toboggan Trajectory
 With the toboggan login problems resolved, you set off toward the airport. While travel by toboggan might be easy, it's certainly not safe: there's very minimal steering and the area is covered in trees. You'll need to see which angles will take you near the fewest trees.
@@ -236,7 +236,7 @@ answer_d3p1<-howmanytrees(day3, 1, 3, 1, 31)
 
 ```
 
-The answer to **Day 3 Part 1** is `r answer_d3p1`
+The answer to **Day 3 Part 1** is `r format(answer_d3p1, nsmall=0, big.mark=",")`
 
 ### Day 3: Part 2
 Time to check the rest of the slopes - you need to minimize the probability of a sudden arboreal stop, after all.
@@ -265,3 +265,141 @@ answer_d3p2 <- r1d1 * r3d1 * r5d1 * r7d1 * r1d2
 The answer to **Day 3 Part 2** is `r format(answer_d3p2, nsmall=0, big.mark=",")`
 
 
+## Day 4: Passport Processing
+You arrive at the airport only to realize that you grabbed your North Pole Credentials instead of your passport. While these documents are extremely similar, North Pole Credentials aren't issued by a country and therefore aren't actually valid documentation for travel in most of the world.
+
+It seems like you're not the only one having problems, though; a very long line has formed for the automatic passport scanners, and the delay could upset your travel itinerary.
+
+Due to some questionable network security, you realize you might be able to solve both of these problems at the same time.
+
+The automatic passport scanners are slow because they're having trouble detecting which passports have all required fields. 
+
+[Full details....](https://adventofcode.com/2020/day/1)
+
+### Day 4: Load the data
+Note participants don't always get the same starting dataset so you should replace the day1.txt dataset with your own if you want to work out your answers.
+
+```{r warning=FALSE, message=FALSE, day4_load}
+#load the packages we need
+library(stringr)
+library(tidyr)
+library(dplyr)
+
+#Remove previous day's data
+rm(list = ls())
+
+#Load the data that will be used for Part 1 & Part 2
+#The data can be  downloaded from https://adventofcode.com/2020/day/4/
+day4 <-  readLines('data/day4.txt')
+nvec <- length(day4)
+
+#Identify empty lines between data as a record terminator
+#remove new lines in the key value pairs within records
+#So all the data for each record is in one string
+breaks <- which(! nzchar(day4))
+nbreaks <- length(breaks)
+if (breaks[nbreaks] < nvec) {
+  breaks <- c(breaks, nvec + 1L)
+  nbreaks <- nbreaks + 1L
+}
+if (nbreaks > 0L) {
+  day4 <- mapply(function(a,b) paste(day4[a:b], collapse = " "),
+                   c(1L, 1L + breaks[-nbreaks]),
+                   breaks - 1L)
+}
+day4<- as.data.frame(day4)
+names(day4)<- c('vpairs')
+
+#Seperate the key value pairs out into columns
+KVsep <- fixed(" ")  #key-value separator
+Vsep <- fixed(":")     #value separator
+
+day4 <-  day4 %>%
+  mutate(KVpairs = str_split(vpairs, KVsep)) %>%
+  unnest(KVpairs) %>%
+  separate(KVpairs, into = c("key", "value"), Vsep) %>%
+  spread(key, value) %>%
+  select(-vpairs)
+
+#remove data that is no longer needed
+rm(breaks, KVsep, nbreaks, nvec, Vsep)
+```
+
+### Day 4: Part 1
+Passport data is validated in batch files (your puzzle input). Each passport is represented as a sequence of key:value pairs separated by spaces or newlines. Passports are separated by blank lines.
+
+According to the above rules, your improved system would report 2 valid passports.
+
+Count the number of valid passports - those that have all required fields. Treat cid as optional. In your batch file, how many passports are valid?
+
+```{r day4_part1}
+#replace missing CID values with NPC (North Pole Credentials)
+#This will make it easier to identify records that have NAs in any other column
+day4$cid[is.na(day4$cid)]<-'NPC'
+
+day4_no_na <-day4[!rowSums(is.na(day4[names(day4)])), ]
+
+#Count rows that don't contain NA
+answer_d4p1<- nrow(day4_no_na)
+```
+
+The answer to **Day 4 Part 1** is `r format(answer_d4p1, nsmall=0, big.mark=",")`
+
+### Day 4: Part 2
+The line is moving more quickly now, but you overhear airport security talking about how passports with invalid data are getting through. Better add some data validation, quick!
+
+You can continue to ignore the cid field, but each other field has strict rules about what values are valid for automatic validation:
+
+* byr (Birth Year) - four digits; at least 1920 and at most 2002.
+* iyr (Issue Year) - four digits; at least 2010 and at most 2020.
+* eyr (Expiration Year) - four digits; at least 2020 and at most 2030.
+* hgt (Height) - a number followed by either cm or in:
+* If cm, the number must be at least 150 and at most 193.
+* If in, the number must be at least 59 and at most 76.
+* hcl (Hair Color) - a # followed by exactly six characters 0-9 or a-f.
+* ecl (Eye Color) - exactly one of: amb blu brn gry grn hzl oth.
+* pid (Passport ID) - a nine-digit number, including leading zeroes.
+* cid (Country ID) - ignored, missing or not.
+
+```{r day4_part2}
+#Filter to remove invalid birth years that are not 4 digits between 1920 and 2002
+day4_no_na <- day4_no_na %>%
+  filter(grepl('^[[:digit:]]{4}$', byr) & between(as.integer(byr), 1920, 2002))
+
+#Filter to remove invalid issue years that are not 4 digits between 2010 and 2020
+day4_no_na <- day4_no_na %>%
+  filter(grepl('^[[:digit:]]{4}$', iyr) & between(as.integer(iyr), 2010, 2020))
+
+#Filter to remove expiration years that are not 4 digits between 2020 and 2030
+day4_no_na <- day4_no_na %>%
+  filter(grepl('^[[:digit:]]{4}$', eyr) & between(as.integer(eyr), 2020, 2030))
+
+#Filter to remove invalid height 
+#extract height to a column as an integer
+day4_no_na$height <-  as.integer(str_sub(day4_no_na$hgt, 1, -3))
+
+#extract the height type (in or cm) to a column
+day4_no_na$heighttype <-  str_sub(day4_no_na$hgt, -2, -1)
+
+day4_no_na <- day4_no_na %>%
+  filter((heighttype == 'cm' & between(height, 150, 193)) | (heighttype == 'in' & between(height, 59, 76)))
+
+#Filter to remove invalid hair colour -  a # followed by exactly six characters 0-9 or a-f.
+day4_no_na <- day4_no_na %>%
+  filter(grepl('^#[0-9a-f]{6}$', hcl))
+
+#Filter to remove invalid eye colour - exactly one of: amb blu brn gry grn hzl oth.
+valid_eyes <- c('amb', 'blu', 'brn', 'gry', 'grn', 'hzl', 'oth')
+
+day4_no_na <- day4_no_na %>%
+  filter(ecl %in% valid_eyes)
+
+#Filter to remove invalid passport id - a nine-digit number, including leading zeroes
+day4_no_na <- day4_no_na %>%
+  filter(grepl('^[0-9]{9}$', pid))
+
+
+answer_d4p2 <- nrow(day4_no_na)
+```
+
+The answer to **Day 4 Part 2** is `r format(answer_d4p2, nsmall=0, big.mark=",")`
