@@ -264,7 +264,6 @@ answer_d3p2 <- r1d1 * r3d1 * r5d1 * r7d1 * r1d2
 
 The answer to **Day 3 Part 2** is `r format(answer_d3p2, nsmall=0, big.mark=",")`
 
-
 ## Day 4: Passport Processing
 You arrive at the airport only to realize that you grabbed your North Pole Credentials instead of your passport. While these documents are extremely similar, North Pole Credentials aren't issued by a country and therefore aren't actually valid documentation for travel in most of the world.
 
@@ -291,6 +290,7 @@ rm(list = ls())
 #Load the data that will be used for Part 1 & Part 2
 #The data can be  downloaded from https://adventofcode.com/2020/day/4/
 day4 <-  readLines('data/day4.txt')
+day4 <-  readLines('Advent_Day4_Code.txt')
 nvec <- length(day4)
 
 #Identify empty lines between data as a record terminator
@@ -403,3 +403,136 @@ answer_d4p2 <- nrow(day4_no_na)
 ```
 
 The answer to **Day 4 Part 2** is `r format(answer_d4p2, nsmall=0, big.mark=",")`
+
+## Day 5: Binary Boarding
+You board your plane only to discover a new problem: you dropped your boarding pass! You aren't sure which seat is yours, and all of the flight attendants are busy with the flood of people that suddenly made it through passport control.
+
+You write a quick program to use your phone's camera to scan all of the nearby boarding passes (your puzzle input); perhaps you can find your seat through process of elimination.
+
+Instead of zones or groups, this airline uses binary space partitioning to seat people. A seat might be specified like FBFBBFFRLR, where F means "front", B means "back", L means "left", and R means "right".
+
+The first 7 characters will either be F or B; these specify exactly one of the 128 rows on the plane (numbered 0 through 127). Each letter tells you which half of a region the given seat is in. Start with the whole list of rows; the first letter indicates whether the seat is in the front (0 through 63) or the back (64 through 127). The next letter indicates which half of that region the seat is in, and so on until you're left with exactly one row.
+
+[Full details....](https://adventofcode.com/2020/day/1)
+
+### Day 5: Load the data
+Note participants don't always get the same starting dataset so you should replace the day1.txt dataset with your own if you want to work out your answers.
+
+```{r warning=FALSE, message=FALSE, day5_load}
+#load the packages we need
+library(dplyr)
+
+#Remove previous day's data
+rm(list = ls())
+
+#Load the data that will be used for Part 1 & Part 2
+#The data can be  downloaded from https://adventofcode.com/2020/day/5/
+day5 <-read.table('data/day5.txt',sep="",header=FALSE, col.names = c('bsp'), stringsAsFactors = FALSE)
+
+```
+
+### Day 5: Part 1
+Every seat also has a unique seat ID: multiply the row by 8, then add the column. In this example, the seat has ID 44 * 8 + 5 = 357.
+
+Here are some other boarding passes:
+
+* BFFFBBFRRR: row 70, column 7, seat ID 567.
+* FFFBBBFRRR: row 14, column 7, seat ID 119.
+* BBFFBBFRLL: row 102, column 4, seat ID 820.
+
+As a sanity check, look through your list of boarding passes. What is the highest seat ID on a boarding pass?
+
+```{r day5_part1}
+#create a function to calculate the SeatID
+calculateSeatId <- function(seatRow, seatCol){
+  return (as.integer((seatRow * 8)+seatCol))
+}
+  
+  
+findSeat <- function(binarySpacePartitioning){
+  #setup a vector for the seat row and column
+  seatRow<-c(0:127)
+  seatCol<-c(0:7)
+  
+  #extract the row and col positions from the bsp into vectors
+  rowPos <-strsplit(substr(binarySpacePartitioning, start = 1, stop = 7),"")[[1]]
+  colPos <-strsplit(substr(binarySpacePartitioning, start = 8, stop = 10),"")[[1]]
+  
+  seatRow<-c(0:127)
+  seatCol<-c(0:7)
+  
+  #loop through each row position
+  for (bsprow in rowPos) {
+    if (bsprow == 'F') {
+      #take first part of vector
+      seatRow<- seatRow[1:(length(seatRow)/2)]
+    } else {
+      #take second part of vector
+      seatRow<- seatRow[((length(seatRow)/2)+1):(length(seatRow))]
+    }
+  }
+  
+  #loop through each column position
+  for (bspcol in colPos) {
+    if (bspcol == 'L') {
+      #take first part of vector
+      seatCol<- seatCol[1:(length(seatCol)/2)]
+    } else {
+      #take second part of vector
+      seatCol<- seatCol[((length(seatCol)/2)+1):(length(seatCol))]
+    }
+  }
+  return (calculateSeatId(seatRow, seatCol))
+}
+
+#Apply the function to all binary Space Partitioning identifiers
+day5$seatID <-  sapply(day5$bsp, findSeat)
+
+#order by seat ID
+day5 <- day5[order(day5$seatID),]
+
+#Get the maximum seatID
+answer_d5p1<- max (day5$seatID, na.rm = TRUE)
+```
+
+The answer to **Day 5 Part 1** is `r format(answer_d5p1, nsmall=0, big.mark=",")`
+
+### Day 5: Part 2
+Ding! The "fasten seat belt" signs have turned on. Time to find your seat.
+
+It's a completely full flight, so your seat should be the only missing boarding pass in your list. However, there's a catch: some of the seats at the very front and back of the plane don't exist on this aircraft, so they'll be missing from your list as well.
+
+Your seat wasn't at the very front or back, though; the seats with IDs +1 and -1 from yours will be in your list.
+
+```{r day5_part2}
+#create a vector or all rows skipping the first and last row
+allRow<-c(1:126)
+
+#create a vector of all columns
+allCol<-c(0:7)
+
+#great all possible seat combinations using the two vectors
+allSeats<-expand.grid(seatRow = allRow, seatCol =allCol)
+
+#calculate the seat id of all possible seats
+allSeats$seatID <- calculateSeatId(allSeats$seatRow, allSeats$seatCol)
+
+#order by seat id
+allSeats <- allSeats[order(allSeats$seatID),]
+
+#Find the missing values between all possible seats and actual seats
+missingSeats <- as.data.frame(setdiff(allSeats$seatID,day5$seatID))
+names(missingSeats) <- 'seatId'
+
+#calculate the id of the seat +1 and -1
+missingSeats$oneup <- missingSeats$seatId + 1
+missingSeats$onedown <- missingSeats$seatId -1
+
+#remove any seats where seatid + 1 or -1 exists (it shouldn't if it is your seat)
+missingSeats  <- missingSeats %>%
+  filter(!(missingSeats$oneup %in% missingSeats$seatId) & !(missingSeats$onedown %in% missingSeats$seatId))
+
+answer_d5p2 <- missingSeats$seatId
+```
+
+The answer to **Day 5 Part 2** is `r format(answer_d5p2, nsmall=0, big.mark=",")`
