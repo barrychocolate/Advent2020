@@ -290,7 +290,6 @@ rm(list = ls())
 #Load the data that will be used for Part 1 & Part 2
 #The data can be  downloaded from https://adventofcode.com/2020/day/4/
 day4 <-  readLines('data/day4.txt')
-day4 <-  readLines('Advent_Day4_Code.txt')
 nvec <- length(day4)
 
 #Identify empty lines between data as a record terminator
