@@ -2012,6 +2012,60 @@ answer_d5p2 &lt;- missingSeats$seatId</code></pre>
 <p>The answer to <strong>Day 5 Part 2</strong> is 653</p>
 </div>
 </div>
+<div id="day-6-custom-customs" class="section level2">
+<h2>Day 6: Custom Customs</h2>
+<p>As your flight approaches the regional airport where you’ll switch to a much larger plane, customs declaration forms are distributed to the passengers.</p>
+<p>The form asks a series of 26 yes-or-no questions marked a through z. All you need to do is identify the questions for which anyone in your group answers “yes”. Since your group is just you, this doesn’t take very long.</p>
+<p>However, the person sitting next to you seems to be experiencing a language barrier and asks if you can help. For each of the people in their group, you write down the questions for which they answer “yes”, one per line.</p>
+<p><a href="https://adventofcode.com/2020/day/6">Full details….</a></p>
+<div id="day-6-load-the-data" class="section level3">
+<h3>Day 6: Load the data</h3>
+<p>Note participants don’t always get the same starting dataset so you should replace the day1.txt dataset with your own if you want to work out your answers.</p>
+<pre class="r"><code>#load the packages we need 
+library(purrr) #for map2 and map_dbl
+
+#Remove previous day&#39;s data
+rm(list = ls())
+
+#Load the data that will be used for Part 1 &amp; Part 2
+#The data can be  downloaded from https://adventofcode.com/2020/day/6/
+day6 &lt;- readLines(&quot;data/day6.txt&quot;)
+
+# Find where groups start and end
+new_lines &lt;- which(day6 == &#39;&#39;)
+group_start &lt;- c(1, new_lines + 1)
+group_end &lt;- c(new_lines - 1, length(day6))
+
+# Create a list of customs cards for traveller groups
+day6 &lt;- map2(group_start, group_end, ~day6[.x : .y])
+
+#remove data no longer required
+rm(group_start, group_end, new_lines)</code></pre>
+</div>
+<div id="day-6-part-1" class="section level3">
+<h3>Day 6: Part 1</h3>
+<p>For each group, count the number of questions to which anyone answered “yes”. What is the sum of those counts?</p>
+<pre class="r"><code>#1 paste combines all items in each list to one string
+#2 strsplit splits the combined string into a list of characters
+#3 unique provides a list of all characters that appear in the string
+#4 Length gets the length of the unique characters i.e the number of unique questions answered
+#Map_dbl allows us to apply this nested function to each element in the list of grouped customs cards
+answer_d6p1&lt;- sum(map_dbl(day6, ~length(unique(strsplit(paste(., collapse = &quot;&quot;), &quot;&quot;)[[1]]))))</code></pre>
+<p>The answer to <strong>Day 6 Part 1</strong> is 6,443</p>
+</div>
+<div id="day-6-part-2" class="section level3">
+<h3>Day 6: Part 2</h3>
+<p>s you finish the last group’s customs declaration, you notice that you misread one word in the instructions:</p>
+<p>You don’t need to identify the questions to which anyone answered “yes”; you need to identify the questions to which everyone answered “yes”!</p>
+<p>For each group, count the number of questions to which everyone answered “yes”. What is the sum of those counts?</p>
+<pre class="r"><code>#strsplit splits the elements within a character string or vector into a list
+#reduce allows us to apply the intersect function to that list to retain only elements present in each list i.e the questions everyone answered
+#length counts eachthe number of questions everyone answered
+#sum aggregates that for all travellers
+answer_d6p2 &lt;- sum(map_dbl(day6, function(x) length(reduce(strsplit(x, &quot;&quot;), intersect))))</code></pre>
+<p>The answer to <strong>Day 6 Part 2</strong> is 3,232</p>
+</div>
+</div>
 
 
 

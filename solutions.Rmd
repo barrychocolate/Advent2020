@@ -535,3 +535,70 @@ answer_d5p2 <- missingSeats$seatId
 ```
 
 The answer to **Day 5 Part 2** is `r format(answer_d5p2, nsmall=0, big.mark=",")`
+
+## Day 6: Custom Customs
+As your flight approaches the regional airport where you'll switch to a much larger plane, customs declaration forms are distributed to the passengers.
+
+The form asks a series of 26 yes-or-no questions marked a through z. All you need to do is identify the questions for which anyone in your group answers "yes". Since your group is just you, this doesn't take very long.
+
+However, the person sitting next to you seems to be experiencing a language barrier and asks if you can help. For each of the people in their group, you write down the questions for which they answer "yes", one per line.
+
+[Full details....](https://adventofcode.com/2020/day/6)
+
+### Day 6: Load the data
+Note participants don't always get the same starting dataset so you should replace the day1.txt dataset with your own if you want to work out your answers.
+
+```{r warning=FALSE, message=FALSE, day6_load}
+#load the packages we need 
+library(purrr) #for map2 and map_dbl
+
+#Remove previous day's data
+rm(list = ls())
+
+#Load the data that will be used for Part 1 & Part 2
+#The data can be  downloaded from https://adventofcode.com/2020/day/6/
+day6 <- readLines("data/day6.txt")
+
+# Find where groups start and end
+new_lines <- which(day6 == '')
+group_start <- c(1, new_lines + 1)
+group_end <- c(new_lines - 1, length(day6))
+
+# Create a list of customs cards for traveller groups
+day6 <- map2(group_start, group_end, ~day6[.x : .y])
+
+#remove data no longer required
+rm(group_start, group_end, new_lines)
+
+```
+
+### Day 6: Part 1
+For each group, count the number of questions to which anyone answered "yes". What is the sum of those counts?
+
+```{r day6_part1}
+#1 paste combines all items in each list to one string
+#2 strsplit splits the combined string into a list of characters
+#3 unique provides a list of all characters that appear in the string
+#4 Length gets the length of the unique characters i.e the number of unique questions answered
+#Map_dbl allows us to apply this nested function to each element in the list of grouped customs cards
+answer_d6p1<- sum(map_dbl(day6, ~length(unique(strsplit(paste(., collapse = ""), "")[[1]]))))
+```
+
+The answer to **Day 6 Part 1** is `r format(answer_d6p1, nsmall=0, big.mark=",")`
+
+### Day 6: Part 2
+s you finish the last group's customs declaration, you notice that you misread one word in the instructions:
+
+You don't need to identify the questions to which anyone answered "yes"; you need to identify the questions to which everyone answered "yes"!
+
+For each group, count the number of questions to which everyone answered "yes". What is the sum of those counts?
+
+```{r day6_part2}
+#strsplit splits the elements within a character string or vector into a list
+#reduce allows us to apply the intersect function to that list to retain only elements present in each list i.e the questions everyone answered
+#length counts eachthe number of questions everyone answered
+#sum aggregates that for all travellers
+answer_d6p2 <- sum(map_dbl(day6, function(x) length(reduce(strsplit(x, ""), intersect))))
+```
+
+The answer to **Day 6 Part 2** is `r format(answer_d6p2, nsmall=0, big.mark=",")`
