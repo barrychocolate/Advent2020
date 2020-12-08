@@ -587,7 +587,7 @@ answer_d6p1<- sum(map_dbl(day6, ~length(unique(strsplit(paste(., collapse = ""),
 The answer to **Day 6 Part 1** is `r format(answer_d6p1, nsmall=0, big.mark=",")`
 
 ### Day 6: Part 2
-s you finish the last group's customs declaration, you notice that you misread one word in the instructions:
+As you finish the last group's customs declaration, you notice that you misread one word in the instructions:
 
 You don't need to identify the questions to which anyone answered "yes"; you need to identify the questions to which everyone answered "yes"!
 
@@ -602,3 +602,181 @@ answer_d6p2 <- sum(map_dbl(day6, function(x) length(reduce(strsplit(x, ""), inte
 ```
 
 The answer to **Day 6 Part 2** is `r format(answer_d6p2, nsmall=0, big.mark=",")`
+
+## Day 7: Handy Haversacks
+You land at the regional airport in time for your next flight. In fact, it looks like you'll even have time to grab some food: all flights are currently delayed due to issues in luggage processing.
+
+Due to recent aviation regulations, many rules (your puzzle input) are being enforced about bags and their contents; bags must be color-coded and must contain specific quantities of other color-coded bags. Apparently, nobody responsible for these regulations considered how long they would take to enforce!
+
+[Full details....](https://adventofcode.com/2020/day/7)
+
+### Day 7: Load the data
+Note participants don't always get the same starting dataset so you should replace the day1.txt dataset with your own if you want to work out your answers.
+
+```{r warning=FALSE, message=FALSE, day7_load}
+#load the packages we need 
+
+#Remove previous day's data
+rm(list = ls())
+
+#Load the data that will be used for Part 1 & Part 2
+#The data can be  downloaded from https://adventofcode.com/2020/day/7/
+day7 <- readLines("data/day7.txt")
+
+
+```
+
+### Day 7: Part 1
+How many bag colors can eventually contain at least one shiny gold bag? (The list of rules is quite long; make sure you get all of it.)
+
+```{r day7_part1}
+#had a day off so will have to find time to do day 7
+
+answer_d7p1<- 64
+```
+
+The answer to **Day 7 Part 1** is `r format(answer_d7p1, nsmall=0, big.mark=",")`
+
+### Day 7: Part 2
+It's getting pretty expensive to fly these days - not because of ticket prices, but because of the ridiculous number of bags you need to buy!
+
+How many individual bags are required inside your single shiny gold bag?
+
+```{r day7_part2}
+#had a day off so will have to find time to do day 7
+
+answer_d7p2 <- 64
+```
+
+The answer to **Day 7 Part 2** is `r format(answer_d7p2, nsmall=0, big.mark=",")`
+
+## Day 8: Handheld Halting
+You land at the regional airport in time for your next flight. In fact, it looks like you'll even have time to grab some food: all flights are currently delayed due to issues in luggage processing.
+
+Due to recent aviation regulations, many rules (your puzzle input) are being enforced about bags and their contents; bags must be color-coded and must contain specific quantities of other color-coded bags. Apparently, nobody responsible for these regulations considered how long they would take to enforce!
+
+Your flight to the major airline hub reaches cruising altitude without incident. While you consider checking the in-flight menu for one of those drinks that come with a little umbrella, you are interrupted by the kid sitting next to you.
+
+Their handheld game console won't turn on! They ask if you can take a look.
+
+You narrow the problem down to a strange infinite loop in the boot code (your puzzle input) of the device. You should be able to fix it, but first you need to be able to run the code in isolation.
+
+[Full details....](https://adventofcode.com/2020/day/8)
+
+### Day 8: Load the data
+Note participants don't always get the same starting dataset so you should replace the day1.txt dataset with your own if you want to work out your answers.
+
+```{r warning=FALSE, message=FALSE, day8_load}
+#load the packages we need 
+
+#Remove previous day's data
+rm(list = ls())
+
+#Load the data that will be used for Part 1 & Part 2
+#The data can be  downloaded from https://adventofcode.com/2020/day/8/
+day8 <-read.table('data/day8.txt',sep="",header=FALSE, col.names = c('action', 'value'), stringsAsFactors = FALSE)
+day8$run <- 0
+```
+
+### Day 8: Part 1
+Run your copy of the boot code. Immediately before any instruction is executed a second time, what value is in the accumulator?
+
+```{r day8_part1}
+#set starting values
+accumulator <- 0
+instruction_to_run<-1
+
+while(day8[instruction_to_run, ]$run != 1) {
+  #Update run value to show this line has been run
+  day8[instruction_to_run, ]$run <- 1
+  
+  #check what action should be carried out
+  if (day8[instruction_to_run, ]$action == 'jmp') {
+    #jump to another instruction
+    instruction_to_run <-
+      sum(instruction_to_run, day8[instruction_to_run, ]$value)
+  } else{
+    if (day8[instruction_to_run, ]$action == 'acc') {
+      #increase the accumulator by the value
+      accumulator <- sum(accumulator, day8[instruction_to_run, ]$value)
+    }
+    # run the next instruction current row +1
+    instruction_to_run <- instruction_to_run + 1
+  }
+}
+
+answer_d8p1<- accumulator
+```
+
+The answer to **Day 8 Part 1** is `r format(answer_d8p1, nsmall=0, big.mark=",")`
+
+### Day 8: Part 2
+After some careful analysis, you believe that exactly one instruction is corrupted.
+
+Somewhere in the program, either a jmp is supposed to be a nop, or a nop is supposed to be a jmp. (No acc instructions were harmed in the corruption of this boot code.)
+
+The program is supposed to terminate by attempting to execute an instruction immediately after the last instruction in the file. By changing exactly one jmp or nop, you can repair the boot code and make it terminate correctly.
+
+Fix the program so that it terminates normally by changing exactly one jmp (to nop) or nop (to jmp). What is the value of the accumulator after the program terminates?
+
+```{r day8_part2}
+#set starting values
+last_instruction <- nrow(day8)
+day8$switched <- 0
+switch_used <- 0
+instruction_to_run <- 1
+  
+#loop until we are on the last instruction + 1
+while(instruction_to_run != (last_instruction +1)) {
+  #reset these variables for each attempt
+  accumulator <- 0
+  instruction_to_run <- 1
+  day8$run<- 0
+  switch_used <- 0
+  
+  #continue looping while we haven't attempted to run a command twice and haven't attempted to run a command outside our list
+  while ((day8[instruction_to_run,]$run != 1)&(instruction_to_run <= last_instruction)) {
+    #Update run value to show this line has been run
+    day8[instruction_to_run,]$run <- 1
+    
+    #what is the recorded action
+    todo <- day8[instruction_to_run,]$action
+    
+    #if we havent switched a jmp or nop on this attempt, and haven't tried switching this command previously, then do it now
+    if ((switch_used==0) & (day8[instruction_to_run,]$switched==0) & (todo %in% c('jmp', 'nop'))){
+      #update variable so we don't switch any more on this attempt
+      switch_used <- 1
+      #update the switched column so we know not to try this one ever again
+      day8[instruction_to_run,]$switched<-1
+      
+      #now swap todo for jmp or vice versa
+      if(todo == 'jmp'){
+        todo <- 'nop'
+      }else{
+        todo <- 'jmp'
+      }
+    }
+    
+    #check what action should be carried out
+    if (todo == 'jmp') {
+      #jump to another instruction
+      instruction_to_run <-
+        sum(instruction_to_run, day8[instruction_to_run,]$value)
+    } else{
+      if (todo == 'acc') {
+        #increase the accumulator by the value
+        accumulator <-
+          sum(accumulator, day8[instruction_to_run,]$value)
+      }
+      # run the next instruction current row +1
+      instruction_to_run <- instruction_to_run + 1
+    }
+  }
+  
+}
+
+answer_d8p2 <- accumulator
+```
+
+The answer to **Day 8 Part 2** is `r format(answer_d8p2, nsmall=0, big.mark=",")`
+
