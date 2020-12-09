@@ -780,3 +780,98 @@ answer_d8p2 <- accumulator
 
 The answer to **Day 8 Part 2** is `r format(answer_d8p2, nsmall=0, big.mark=",")`
 
+## Day 9: Encoding Error
+With your neighbor happily enjoying their video game, you turn your attention to an open data port on the little screen in the seat in front of you.
+
+Though the port is non-standard, you manage to connect it to your computer through the clever use of several paperclips. Upon connection, the port outputs a series of numbers (your puzzle input).
+
+The data appears to be encrypted with the eXchange-Masking Addition System (XMAS) which, conveniently for you, is an old cypher with an important weakness.
+
+XMAS starts by transmitting a preamble of 25 numbers. After that, each number you receive should be the sum of any two of the 25 immediately previous numbers. The two numbers will have different values, and there might be more than one such pair.
+
+[Full details....](https://adventofcode.com/2020/day/9)
+
+### Day 9: Load the data
+Note participants don't always get the same starting dataset so you should replace the day1.txt dataset with your own if you want to work out your answers.
+
+```{r warning=FALSE, message=FALSE, day9_load}
+#load the packages we need 
+
+#Remove previous day's data
+rm(list = ls())
+
+#Load the data that will be used for Part 1 & Part 2
+#The data can be  downloaded from https://adventofcode.com/2020/day/9/
+day9 <-read.table('data/day9.txt',sep="",header=FALSE, col.names = c('ciper'), stringsAsFactors = FALSE)
+
+```
+
+### Day 9: Part 1
+The first step of attacking the weakness in the XMAS data is to find the first number in the list (after the preamble) which is not the sum of two of the 25 numbers before it. What is the first number that does not have this property?
+
+```{r day9_part1}
+#Boolean function to test if two numbers in the previous preamble sum to the current value
+inPreamble <- function(xmas_data, current_position, preamble_size) {
+  #find the value that needs to match the sum of two of the previous numbers
+  value_to_match <- xmas_data$ciper[current_position]
+  
+  #get all combonations
+  all_combos <- expand.grid(xmas_data$ciper[(current_position - preamble_size):(current_position - 1)], xmas_data$ciper[(current_position - preamble_size):(current_position - 1)])
+  
+  #Calulate the sum of the two numbers
+  all_combos$agg <- all_combos$Var1 + all_combos$Var2
+  
+  #Remove were the number is paired with itself
+  all_combos <-
+    all_combos[all_combos$Var1 != all_combos$Var2, ]
+  
+  #Deduplicate
+  all_combos <- all_combos[all_combos$Var1 < all_combos$Var2, ]
+  
+  #Filter to find any row that matches the value
+  return (nrow(all_combos[all_combos$agg == value_to_match, ]) > 0)
+}
+
+
+preamble_size <- 25
+loop_counter <- (preamble_size + 1):(nrow(day9))
+
+for (val in loop_counter) {
+  if (inPreamble(day9, val, preamble_size) == FALSE) {
+    answer_d9p1 <- day9$ciper[val]
+    break
+  }
+}
+
+```
+
+The answer to **Day 9 Part 1** is `r format(answer_d9p1, nsmall=0, big.mark=",")`
+
+### Day 9: Part 2
+The final step in breaking the XMAS encryption relies on the invalid number you just found: you must find a contiguous set of at least two numbers in your list which sum to the invalid number from step 1.
+
+To find the encryption weakness, add together the smallest and largest number in this contiguous range; in this example, these are 15 and 47, producing 62.
+
+```{r day9_part2}
+
+loop_counter <- (preamble_size + 1):(nrow(day9)-1)
+#start by adding just the current and next number, then increase to add an extra number each attempt
+contig <- (1:(nrow(day9)-preamble_size))
+answer_found <- FALSE
+
+for (x in contig)
+  for (val in loop_counter) {
+    if (sum(day9$ciper[val:(val+x)], na.rm = TRUE)==answer_d9p1){
+      answer_d9p2 <- day9$ciper[val:(val+x)]
+      answer_found<-TRUE
+      break
+    }
+    if(answer_found==TRUE){break}
+    
+  }
+
+answer_d9p2 <- min(answer_d9p2) + max(answer_d9p2)
+
+```
+
+The answer to **Day 9 Part 2** is `r format(answer_d9p2, nsmall=0, big.mark=",")`

@@ -2216,6 +2216,86 @@ answer_d8p2 &lt;- accumulator</code></pre>
 <p>The answer to <strong>Day 8 Part 2</strong> is 2,060</p>
 </div>
 </div>
+<div id="day-9-encoding-error" class="section level2">
+<h2>Day 9: Encoding Error</h2>
+<p>With your neighbor happily enjoying their video game, you turn your attention to an open data port on the little screen in the seat in front of you.</p>
+<p>Though the port is non-standard, you manage to connect it to your computer through the clever use of several paperclips. Upon connection, the port outputs a series of numbers (your puzzle input).</p>
+<p>The data appears to be encrypted with the eXchange-Masking Addition System (XMAS) which, conveniently for you, is an old cypher with an important weakness.</p>
+<p>XMAS starts by transmitting a preamble of 25 numbers. After that, each number you receive should be the sum of any two of the 25 immediately previous numbers. The two numbers will have different values, and there might be more than one such pair.</p>
+<p><a href="https://adventofcode.com/2020/day/9">Full details….</a></p>
+<div id="day-9-load-the-data" class="section level3">
+<h3>Day 9: Load the data</h3>
+<p>Note participants don’t always get the same starting dataset so you should replace the day1.txt dataset with your own if you want to work out your answers.</p>
+<pre class="r"><code>#load the packages we need 
+
+#Remove previous day&#39;s data
+rm(list = ls())
+
+#Load the data that will be used for Part 1 &amp; Part 2
+#The data can be  downloaded from https://adventofcode.com/2020/day/9/
+day9 &lt;-read.table(&#39;data/day9.txt&#39;,sep=&quot;&quot;,header=FALSE, col.names = c(&#39;ciper&#39;), stringsAsFactors = FALSE)</code></pre>
+</div>
+<div id="day-9-part-1" class="section level3">
+<h3>Day 9: Part 1</h3>
+<p>The first step of attacking the weakness in the XMAS data is to find the first number in the list (after the preamble) which is not the sum of two of the 25 numbers before it. What is the first number that does not have this property?</p>
+<pre class="r"><code>#Boolean function to test if two numbers in the previous preamble sum to the current value
+inPreamble &lt;- function(xmas_data, current_position, preamble_size) {
+  #find the value that needs to match the sum of two of the previous numbers
+  value_to_match &lt;- xmas_data$ciper[current_position]
+  
+  #get all combonations
+  all_combos &lt;- expand.grid(xmas_data$ciper[(current_position - preamble_size):(current_position - 1)], xmas_data$ciper[(current_position - preamble_size):(current_position - 1)])
+  
+  #Calulate the sum of the two numbers
+  all_combos$agg &lt;- all_combos$Var1 + all_combos$Var2
+  
+  #Remove were the number is paired with itself
+  all_combos &lt;-
+    all_combos[all_combos$Var1 != all_combos$Var2, ]
+  
+  #Deduplicate
+  all_combos &lt;- all_combos[all_combos$Var1 &lt; all_combos$Var2, ]
+  
+  #Filter to find any row that matches the value
+  return (nrow(all_combos[all_combos$agg == value_to_match, ]) &gt; 0)
+}
+
+
+preamble_size &lt;- 25
+loop_counter &lt;- (preamble_size + 1):(nrow(day9))
+
+for (val in loop_counter) {
+  if (inPreamble(day9, val, preamble_size) == FALSE) {
+    answer_d9p1 &lt;- day9$ciper[val]
+    break
+  }
+}</code></pre>
+<p>The answer to <strong>Day 9 Part 1</strong> is 21,806,024</p>
+</div>
+<div id="day-9-part-2" class="section level3">
+<h3>Day 9: Part 2</h3>
+<p>The final step in breaking the XMAS encryption relies on the invalid number you just found: you must find a contiguous set of at least two numbers in your list which sum to the invalid number from step 1.</p>
+<p>To find the encryption weakness, add together the smallest and largest number in this contiguous range; in this example, these are 15 and 47, producing 62.</p>
+<pre class="r"><code>loop_counter &lt;- (preamble_size + 1):(nrow(day9)-1)
+#start by adding just the current and next number, then increase to add an extra number each attempt
+contig &lt;- (1:(nrow(day9)-preamble_size))
+answer_found &lt;- FALSE
+
+for (x in contig)
+  for (val in loop_counter) {
+    if (sum(day9$ciper[val:(val+x)], na.rm = TRUE)==answer_d9p1){
+      answer_d9p2 &lt;- day9$ciper[val:(val+x)]
+      answer_found&lt;-TRUE
+      break
+    }
+    if(answer_found==TRUE){break}
+    
+  }
+
+answer_d9p2 &lt;- min(answer_d9p2) + max(answer_d9p2)</code></pre>
+<p>The answer to <strong>Day 9 Part 2</strong> is 2,986,195</p>
+</div>
+</div>
 
 
 
