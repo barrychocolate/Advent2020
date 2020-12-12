@@ -2392,6 +2392,279 @@ answer_d10p2 &lt;- prod(day10_paths, na.rm = TRUE)</code></pre>
 <p>The answer to <strong>Day 10 Part 2</strong> is 259,172,170,858,496</p>
 </div>
 </div>
+<div id="day-11-seating-system" class="section level2">
+<h2>Day 11: Seating System</h2>
+<p>Your plane lands with plenty of time to spare. The final leg of your journey is a ferry that goes directly to the tropical island where you can finally start your vacation. As you reach the waiting area to board the ferry, you realize you’re so early, nobody else has even arrived yet!</p>
+<p>By modeling the process people use to choose (or abandon) their seat in the waiting area, you’re pretty sure you can predict the best place to sit. You make a quick map of the seat layout (your puzzle input).</p>
+<p>The seat layout fits neatly on a grid. Each position is either floor (.), an empty seat (L), or an occupied seat (#). For example, the initial seat layout might look like this:…..</p>
+<p><a href="https://adventofcode.com/2020/day/11">Full details….</a></p>
+<div id="day-11-load-the-data" class="section level3">
+<h3>Day 11: Load the data</h3>
+<p>Note participants don’t always get the same starting dataset so you should replace the day1.txt dataset with your own if you want to work out your answers.</p>
+<pre class="r"><code>#load the packages we need 
+
+
+#Remove previous day&#39;s data
+rm(list = ls())
+
+#Load the data that will be used for Part 1 &amp; Part 2
+#The data can be  downloaded from https://adventofcode.com/2020/day/11/
+day11 &lt;-(readLines(&quot;data/day11.txt&quot;))
+
+#split into a list of vectors
+day11 &lt;- strsplit(day11, &quot;&quot;)
+
+#convert to matrix so we can traverse by row and col
+day11 &lt;-  matrix(unlist(day11), ncol = length(day11[[1]]), byrow = TRUE)
+
+#convert seats to binary - empty seat = 0 occupied seat = 1 no seat = NA
+day11 &lt;- chartr(&quot;L&quot;, &quot;0&quot;, day11)
+day11 &lt;- chartr(&quot;#&quot;, &quot;1&quot;, day11)
+day11 &lt;- chartr(&quot;.&quot;, &quot;NA&quot;, day11)
+
+#convert matrix to numeric so we can use sum functions
+day11 &lt;- apply(day11, 2, as.numeric)</code></pre>
+</div>
+<div id="day-11-part-1" class="section level3">
+<h3>Day 11: Part 1</h3>
+<p>At this point, something interesting happens: the chaos stabilizes and further applications of these rules cause no seats to change state! Once people stop moving around, you count 37 occupied seats.</p>
+<p>Simulate your seating area by applying the seating rules repeatedly until no seats change state. How many seats end up occupied?</p>
+<pre class="r"><code>#row and col counters to loop through the matrix
+row_counter &lt;- c(1:nrow(day11))
+col_counter &lt;- c(1:ncol(day11))
+
+current_positions = matrix(, nrow = nrow(day11), ncol = ncol(day11))
+#convert matrix to numeric so we can use sum functions
+current_positions &lt;- apply(current_positions, 2, as.numeric)
+
+new_positions &lt;-day11
+i&lt;-1
+
+Calculate_seat &lt;- function(thematrix, therow, thecol){
+  if(is.na(thematrix[therow,thecol])){
+    return (NA)
+  }else{
+    
+    
+    
+    colstart &lt;- thecol-1
+    colend &lt;- thecol+1
+    rowstart &lt;- therow-1
+    rowend &lt;- therow+1
+    
+    if (colstart&lt;1){colstart&lt;-1}
+    if (colend&gt;ncol(thematrix)){colend&lt;-ncol(thematrix)}
+    if (rowstart&lt;1){rowstart&lt;-1}
+    if (rowend&gt;nrow(thematrix)){rowend&lt;-nrow(thematrix)}
+    
+    if (thematrix[therow,thecol]==1){
+      if ((sum(thematrix[rowstart:rowend, colstart:colend], na.rm = TRUE)-thematrix[therow,thecol])&gt;=4){
+        #seat becomes empty
+        return (0)
+      }else{
+        #seat stays occupied
+        return(1)
+      }
+    }else{
+      #seat is unocupied
+      if ((sum(thematrix[rowstart:rowend, colstart:colend], na.rm = TRUE)-thematrix[therow,thecol])==0){
+        #seat becomes occupied
+        return (1)
+      }else{
+        #seat stays empty
+        return(0)
+      }
+    }
+  }
+}
+
+#do until new positions = current positions i.e no more changes possible
+while (!identical(new_positions, current_positions)){
+  current_positions&lt;- new_positions
+  
+  for(r in row_counter){
+    for(c in col_counter){
+    new_positions[r, c]&lt;- Calculate_seat(current_positions, r ,c)
+    }
+  }
+  #debugging
+  #message(paste (i, &#39; seat total&#39;, sum(new_positions, na.rm = TRUE)))
+  i &lt;-i+1
+}
+
+answer_d11p1 &lt;- sum(new_positions, na.rm = TRUE)</code></pre>
+<p>The answer to <strong>Day 11 Part 1</strong> is 2,472</p>
+</div>
+<div id="day-11-part-2" class="section level3">
+<h3>Day 11: Part 2</h3>
+<p>Given the new visibility method and the rule change for occupied seats becoming empty, once equilibrium is reached, how many seats end up occupied?</p>
+<pre class="r"><code>#row and col counters to loop through the matrix
+row_counter &lt;- c(1:nrow(day11))
+col_counter &lt;- c(1:ncol(day11))
+
+#create empty matrix
+current_positions = matrix(, nrow = nrow(day11), ncol = ncol(day11))
+
+new_positions &lt;-day11
+i&lt;-1
+
+    #extract a diagonal vector from a matrix
+  # direction is either NE, SE, SW, NW
+get_diagonal &lt;-
+  function(yourmatrix,
+           yourrow,
+           yourcol,
+           direction) {
+    if (direction == &quot;SE&quot;) {
+      if(yourrow ==nrow(yourmatrix) || yourcol ==ncol(yourmatrix)){return(NA)}
+      #calculate the size of the square needed
+      sq_size = min((nrow(yourmatrix) - yourrow), ncol(yourmatrix) - yourcol)
+      
+      #subset the matrix to the square we want
+      diag_mat &lt;-
+        as.matrix(yourmatrix[(yourrow + 1):(yourrow + sq_size), (yourcol + 1):(yourcol + sq_size)])
+    } else if (direction == &quot;NE&quot;) {
+      if(yourrow ==1 || yourcol ==ncol(yourmatrix)){return(NA)}
+      #calculate the size of the square needed
+      sq_size = min((yourrow - 1), (ncol(yourmatrix)-yourcol))
+      
+      #subset the matrix to the square we want
+      diag_mat &lt;-
+        as.matrix(yourmatrix[(yourrow - sq_size):(yourrow - 1), (yourcol + 1):(yourcol +  sq_size)])
+    }else if(direction == &quot;NW&quot;){
+      if(yourrow ==1 || yourcol ==1){return(NA)}
+      #calculate the size of the square needed
+      sq_size = min((yourrow - 1), (yourcol-1))
+      
+      #subset the matrix to the square we want
+      diag_mat &lt;-
+        as.matrix(yourmatrix[(yourrow - sq_size):(yourrow - 1), (yourcol - sq_size):(yourcol -1)])      
+    }else if(direction == &quot;SW&quot;){
+      if(yourrow ==nrow(yourmatrix) || yourcol ==1){return(NA)}
+      
+      #calculate the size of the square needed
+      sq_size = min((nrow(yourmatrix) - yourrow), (yourcol-1))
+      
+      #subset the matrix to the square we want
+      diag_mat &lt;-
+        as.matrix(yourmatrix[(yourrow + 1):(yourrow + sq_size), (yourcol - sq_size):(yourcol -1)])    
+    }
+    
+    #vector to hold the diagonal values
+    d_vec = numeric(sq_size)
+    
+    #upwards diagonal
+    if (direction %in% c(&#39;SE&#39;, &#39;NW&#39;) == TRUE) {
+      #downwards diagonal
+      for (i in seq_len(sq_size)) {
+        d_vec[i] = diag_mat[i, i]
+      }
+    } else{
+      for (i in seq_len(sq_size)) {
+        d_vec[i] = diag_mat[(nrow(diag_mat) + 1) - i, i]
+      }
+    }
+    
+    #reverse the vector for positions to the left of the chair
+    if (direction %in% c(&quot;NW&quot;, &quot;SW&quot;)) {
+      d_vec &lt;- rev(d_vec)
+    }
+    return (d_vec)
+    
+  }
+
+Calculate_seat &lt;- function(thematrix, therow, thecol){
+  if(is.na(thematrix[therow,thecol])){
+    #No seat so no action required
+    return (NA)
+  }else{
+    #calculate the surounding seats (use compass positions)
+    #extract a vector - reverse the vector if it is N, NW, W, SW
+    #omit NAs and take the first value
+    #if it is the first/last col/row then return na
+
+    #North (reverse the vector)
+    if (therow!=1){
+      n &lt;-  dplyr::first(na.omit(rev(thematrix[(1:(therow-1)),thecol])))
+    }else{
+      n&lt;-NA
+    }
+        
+    #East
+    if (thecol!=ncol(thematrix)){
+      e &lt;-  dplyr::first(na.omit(thematrix[therow,((thecol+1):ncol(thematrix))]))
+    }else{
+      e&lt;-NA
+    }
+    
+    #South
+    if (therow!=nrow(thematrix)){
+      s &lt;-  dplyr::first(na.omit(thematrix[((therow+1):nrow(thematrix)),thecol]))
+    }else{
+      s&lt;-NA
+    }    
+    #West (reverse the vector)
+    if (thecol!=1){
+      w &lt;-  dplyr::first(na.omit(rev(thematrix[therow,(1:(thecol-1))])))
+          }else{
+      w&lt;-NA
+    }    
+    
+    #diagonal matrixes
+    #NE
+    ne&lt;- dplyr::first(na.omit(get_diagonal(thematrix,therow,thecol,&quot;NE&quot;)))
+    
+    #SE
+    se &lt;- dplyr::first(na.omit(get_diagonal(thematrix,therow,thecol,&quot;SE&quot;)))
+    
+    #SW
+    sw &lt;- dplyr::first(na.omit(get_diagonal(thematrix,therow,thecol,&quot;SW&quot;)))
+    
+    #NW
+    nw &lt;- dplyr::first(na.omit(get_diagonal(thematrix,therow,thecol,&quot;NW&quot;)))
+    
+    #Check if seat is occupied
+    if (thematrix[therow,thecol]==1){
+      #check If four surrounding seats are occupied
+      if (sum(n, ne, e, se, s, sw, w, nw, na.rm = TRUE)&gt;=5){
+        #seat becomes empty
+        return (0)
+      }else{
+        #seat stays occupied
+        return(1)
+      }
+    }else{
+      #seat is unocupied
+      #Check if surrounding seats are occupied
+      if (sum(n, ne, e, se, s, sw, w, nw, na.rm = TRUE)==0){
+        #seat becomes occupied
+        return (1)
+      }else{
+        #seat stays empty
+        return(0)
+      }
+    }
+  }
+}
+
+#do until new positions = current positions i.e no more changes possible
+while (!identical(new_positions, current_positions)){
+  current_positions&lt;- new_positions
+  
+  for(r in row_counter){
+    for(c in col_counter){
+    new_positions[r, c]&lt;- Calculate_seat(current_positions, r ,c)
+    }
+  }
+  #debugging
+  #message(paste (i, &#39; seat total&#39;, sum(new_positions, na.rm = TRUE)))
+  i &lt;-i+1
+}
+
+answer_d11p2 &lt;- sum(new_positions, na.rm = TRUE)</code></pre>
+<p>The answer to <strong>Day 11 Part 2</strong> is 2,197</p>
+</div>
+</div>
 
 
 

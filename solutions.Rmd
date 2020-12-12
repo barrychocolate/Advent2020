@@ -985,3 +985,289 @@ answer_d10p2 <- prod(day10_paths, na.rm = TRUE)
 ```
 
 The answer to **Day 10 Part 2** is `r format(answer_d10p2, nsmall=0, big.mark=",")`
+
+## Day 11: Seating System
+Your plane lands with plenty of time to spare. The final leg of your journey is a ferry that goes directly to the tropical island where you can finally start your vacation. As you reach the waiting area to board the ferry, you realize you're so early, nobody else has even arrived yet!
+
+By modeling the process people use to choose (or abandon) their seat in the waiting area, you're pretty sure you can predict the best place to sit. You make a quick map of the seat layout (your puzzle input).
+
+The seat layout fits neatly on a grid. Each position is either floor (.), an empty seat (L), or an occupied seat (#). For example, the initial seat layout might look like this:.....
+
+[Full details....](https://adventofcode.com/2020/day/11)
+
+### Day 11: Load the data
+Note participants don't always get the same starting dataset so you should replace the day1.txt dataset with your own if you want to work out your answers.
+
+```{r warning=FALSE, message=FALSE, day11_load}
+#load the packages we need 
+
+
+#Remove previous day's data
+rm(list = ls())
+
+#Load the data that will be used for Part 1 & Part 2
+#The data can be  downloaded from https://adventofcode.com/2020/day/11/
+day11 <-(readLines("data/day11.txt"))
+
+#split into a list of vectors
+day11 <- strsplit(day11, "")
+
+#convert to matrix so we can traverse by row and col
+day11 <-  matrix(unlist(day11), ncol = length(day11[[1]]), byrow = TRUE)
+
+#convert seats to binary - empty seat = 0 occupied seat = 1 no seat = NA
+day11 <- chartr("L", "0", day11)
+day11 <- chartr("#", "1", day11)
+day11 <- chartr(".", "NA", day11)
+
+#convert matrix to numeric so we can use sum functions
+day11 <- apply(day11, 2, as.numeric)
+
+```
+
+### Day 11: Part 1
+At this point, something interesting happens: the chaos stabilizes and further applications of these rules cause no seats to change state! Once people stop moving around, you count 37 occupied seats.
+
+Simulate your seating area by applying the seating rules repeatedly until no seats change state. How many seats end up occupied?
+
+```{r day11_part1}
+#row and col counters to loop through the matrix
+row_counter <- c(1:nrow(day11))
+col_counter <- c(1:ncol(day11))
+
+current_positions = matrix(, nrow = nrow(day11), ncol = ncol(day11))
+#convert matrix to numeric so we can use sum functions
+current_positions <- apply(current_positions, 2, as.numeric)
+
+new_positions <-day11
+i<-1
+
+Calculate_seat <- function(thematrix, therow, thecol){
+  if(is.na(thematrix[therow,thecol])){
+    return (NA)
+  }else{
+    
+    
+    
+    colstart <- thecol-1
+    colend <- thecol+1
+    rowstart <- therow-1
+    rowend <- therow+1
+    
+    if (colstart<1){colstart<-1}
+    if (colend>ncol(thematrix)){colend<-ncol(thematrix)}
+    if (rowstart<1){rowstart<-1}
+    if (rowend>nrow(thematrix)){rowend<-nrow(thematrix)}
+    
+    if (thematrix[therow,thecol]==1){
+      if ((sum(thematrix[rowstart:rowend, colstart:colend], na.rm = TRUE)-thematrix[therow,thecol])>=4){
+        #seat becomes empty
+        return (0)
+      }else{
+        #seat stays occupied
+        return(1)
+      }
+    }else{
+      #seat is unocupied
+      if ((sum(thematrix[rowstart:rowend, colstart:colend], na.rm = TRUE)-thematrix[therow,thecol])==0){
+        #seat becomes occupied
+        return (1)
+      }else{
+        #seat stays empty
+        return(0)
+      }
+    }
+  }
+}
+
+#do until new positions = current positions i.e no more changes possible
+while (!identical(new_positions, current_positions)){
+  current_positions<- new_positions
+  
+  for(r in row_counter){
+    for(c in col_counter){
+    new_positions[r, c]<- Calculate_seat(current_positions, r ,c)
+    }
+  }
+  #debugging
+  #message(paste (i, ' seat total', sum(new_positions, na.rm = TRUE)))
+  i <-i+1
+}
+
+answer_d11p1 <- sum(new_positions, na.rm = TRUE)
+```
+
+
+The answer to **Day 11 Part 1** is `r format(answer_d11p1, nsmall=0, big.mark=",")`
+
+### Day 11: Part 2
+Given the new visibility method and the rule change for occupied seats becoming empty, once equilibrium is reached, how many seats end up occupied?
+
+```{r day11_part2}
+#row and col counters to loop through the matrix
+row_counter <- c(1:nrow(day11))
+col_counter <- c(1:ncol(day11))
+
+#create empty matrix
+current_positions = matrix(, nrow = nrow(day11), ncol = ncol(day11))
+
+new_positions <-day11
+i<-1
+
+    #extract a diagonal vector from a matrix
+  # direction is either NE, SE, SW, NW
+get_diagonal <-
+  function(yourmatrix,
+           yourrow,
+           yourcol,
+           direction) {
+    if (direction == "SE") {
+      if(yourrow ==nrow(yourmatrix) || yourcol ==ncol(yourmatrix)){return(NA)}
+      #calculate the size of the square needed
+      sq_size = min((nrow(yourmatrix) - yourrow), ncol(yourmatrix) - yourcol)
+      
+      #subset the matrix to the square we want
+      diag_mat <-
+        as.matrix(yourmatrix[(yourrow + 1):(yourrow + sq_size), (yourcol + 1):(yourcol + sq_size)])
+    } else if (direction == "NE") {
+      if(yourrow ==1 || yourcol ==ncol(yourmatrix)){return(NA)}
+      #calculate the size of the square needed
+      sq_size = min((yourrow - 1), (ncol(yourmatrix)-yourcol))
+      
+      #subset the matrix to the square we want
+      diag_mat <-
+        as.matrix(yourmatrix[(yourrow - sq_size):(yourrow - 1), (yourcol + 1):(yourcol +  sq_size)])
+    }else if(direction == "NW"){
+      if(yourrow ==1 || yourcol ==1){return(NA)}
+      #calculate the size of the square needed
+      sq_size = min((yourrow - 1), (yourcol-1))
+      
+      #subset the matrix to the square we want
+      diag_mat <-
+        as.matrix(yourmatrix[(yourrow - sq_size):(yourrow - 1), (yourcol - sq_size):(yourcol -1)])      
+    }else if(direction == "SW"){
+      if(yourrow ==nrow(yourmatrix) || yourcol ==1){return(NA)}
+      
+      #calculate the size of the square needed
+      sq_size = min((nrow(yourmatrix) - yourrow), (yourcol-1))
+      
+      #subset the matrix to the square we want
+      diag_mat <-
+        as.matrix(yourmatrix[(yourrow + 1):(yourrow + sq_size), (yourcol - sq_size):(yourcol -1)])    
+    }
+    
+    #vector to hold the diagonal values
+    d_vec = numeric(sq_size)
+    
+    #upwards diagonal
+    if (direction %in% c('SE', 'NW') == TRUE) {
+      #downwards diagonal
+      for (i in seq_len(sq_size)) {
+        d_vec[i] = diag_mat[i, i]
+      }
+    } else{
+      for (i in seq_len(sq_size)) {
+        d_vec[i] = diag_mat[(nrow(diag_mat) + 1) - i, i]
+      }
+    }
+    
+    #reverse the vector for positions to the left of the chair
+    if (direction %in% c("NW", "SW")) {
+      d_vec <- rev(d_vec)
+    }
+    return (d_vec)
+    
+  }
+
+Calculate_seat <- function(thematrix, therow, thecol){
+  if(is.na(thematrix[therow,thecol])){
+    #No seat so no action required
+    return (NA)
+  }else{
+    #calculate the surounding seats (use compass positions)
+    #extract a vector - reverse the vector if it is N, NW, W, SW
+    #omit NAs and take the first value
+    #if it is the first/last col/row then return na
+
+    #North (reverse the vector)
+    if (therow!=1){
+      n <-  dplyr::first(na.omit(rev(thematrix[(1:(therow-1)),thecol])))
+    }else{
+      n<-NA
+    }
+        
+    #East
+    if (thecol!=ncol(thematrix)){
+      e <-  dplyr::first(na.omit(thematrix[therow,((thecol+1):ncol(thematrix))]))
+    }else{
+      e<-NA
+    }
+    
+    #South
+    if (therow!=nrow(thematrix)){
+      s <-  dplyr::first(na.omit(thematrix[((therow+1):nrow(thematrix)),thecol]))
+    }else{
+      s<-NA
+    }    
+    #West (reverse the vector)
+    if (thecol!=1){
+      w <-  dplyr::first(na.omit(rev(thematrix[therow,(1:(thecol-1))])))
+          }else{
+      w<-NA
+    }    
+    
+    #diagonal matrixes
+    #NE
+    ne<- dplyr::first(na.omit(get_diagonal(thematrix,therow,thecol,"NE")))
+    
+    #SE
+    se <- dplyr::first(na.omit(get_diagonal(thematrix,therow,thecol,"SE")))
+    
+    #SW
+    sw <- dplyr::first(na.omit(get_diagonal(thematrix,therow,thecol,"SW")))
+    
+    #NW
+    nw <- dplyr::first(na.omit(get_diagonal(thematrix,therow,thecol,"NW")))
+    
+    #Check if seat is occupied
+    if (thematrix[therow,thecol]==1){
+      #check If four surrounding seats are occupied
+      if (sum(n, ne, e, se, s, sw, w, nw, na.rm = TRUE)>=5){
+        #seat becomes empty
+        return (0)
+      }else{
+        #seat stays occupied
+        return(1)
+      }
+    }else{
+      #seat is unocupied
+      #Check if surrounding seats are occupied
+      if (sum(n, ne, e, se, s, sw, w, nw, na.rm = TRUE)==0){
+        #seat becomes occupied
+        return (1)
+      }else{
+        #seat stays empty
+        return(0)
+      }
+    }
+  }
+}
+
+#do until new positions = current positions i.e no more changes possible
+while (!identical(new_positions, current_positions)){
+  current_positions<- new_positions
+  
+  for(r in row_counter){
+    for(c in col_counter){
+    new_positions[r, c]<- Calculate_seat(current_positions, r ,c)
+    }
+  }
+  #debugging
+  #message(paste (i, ' seat total', sum(new_positions, na.rm = TRUE)))
+  i <-i+1
+}
+
+answer_d11p2 <- sum(new_positions, na.rm = TRUE)
+```
+
+The answer to **Day 11 Part 2** is `r format(answer_d11p2, nsmall=0, big.mark=",")`
