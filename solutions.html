@@ -1712,7 +1712,7 @@ answer_d2p2 &lt;- nrow(day2_p2_valid)</code></pre>
 <pre class="r"><code>#Remove previous day&#39;s data
 rm(list = ls())
 
-#dplyr for filter, numebrs for mod function
+#dplyr for filter, numbers for mod function
 library(dplyr, numbers)
 
 #Load the data that will be used for Part 1 &amp; Part 2
@@ -2663,6 +2663,124 @@ while (!identical(new_positions, current_positions)){
 
 answer_d11p2 &lt;- sum(new_positions, na.rm = TRUE)</code></pre>
 <p>The answer to <strong>Day 11 Part 2</strong> is 2,197</p>
+</div>
+</div>
+<div id="day-12-rain-risk" class="section level2">
+<h2>Day 12: Rain Risk</h2>
+<p>Your ferry made decent progress toward the island, but the storm came in faster than anyone expected. The ferry needs to take evasive actions!</p>
+<p>Unfortunately, the ship’s navigation computer seems to be malfunctioning; rather than giving a route directly to safety, it produced extremely circuitous instructions. When the captain uses the PA system to ask if anyone can help, you quickly volunteer.</p>
+<p>The navigation instructions (your puzzle input) consists of a sequence of single-character actions paired with integer input values. After staring at them for a few minutes, you work out what they probably mean: …..</p>
+<p><a href="https://adventofcode.com/2020/day/12">Full details….</a></p>
+<div id="day-12-load-the-data" class="section level3">
+<h3>Day 12: Load the data</h3>
+<p>Note participants don’t always get the same starting dataset so you should replace the day1.txt dataset with your own if you want to work out your answers.</p>
+<pre class="r"><code>#load the packages we need 
+library(stringr, numbers)
+
+#Remove previous day&#39;s data
+rm(list = ls())
+
+#Load the data that will be used for Part 1 &amp; Part 2
+#The data can be  downloaded from https://adventofcode.com/2020/day/12/
+day12 &lt;-read.table(&quot;data/day12.txt&quot;,col.names = c(&quot;raw&quot;) )
+
+#extract command and number from raw data
+day12$command &lt;- str_sub(day12$raw,1,1)
+day12$value &lt;- as.integer(str_sub(day12$raw,2,-1))</code></pre>
+</div>
+<div id="day-12-part-1" class="section level3">
+<h3>Day 12: Part 1</h3>
+<p>At the end of these instructions, the ship’s Manhattan distance (sum of the absolute values of its east/west position and its north/south position) from its starting position is 17 + 8 = 25.</p>
+<p>Figure out where the navigation instructions lead. What is the Manhattan distance between that location and the ship’s starting position?</p>
+<pre class="r"><code>x&lt;-as.numeric(0)
+y&lt;-as.numeric(0)
+facing&lt;-as.numeric(90)
+
+#loop through each command
+for(i in 1:nrow(day12)){
+  cur_com &lt;- day12$command[i]
+  cur_val &lt;- day12$value[i]
+  
+  if(cur_com==&quot;N&quot;){
+    y &lt;- y + cur_val
+  }else if(cur_com==&quot;E&quot;){
+    x &lt;- x + cur_val  
+  }else if(cur_com==&quot;S&quot;){
+    y &lt;- y - cur_val
+  }else if (cur_com==&quot;W&quot;){
+    x &lt;- x - cur_val
+  }else if(cur_com==&quot;L&quot;){
+    facing &lt;- numbers::mod((facing-cur_val), 360)
+  }else if(cur_com==&quot;R&quot;){
+    facing &lt;- numbers::mod((facing+cur_val), 360)
+  }else{
+    #move forward
+    if (facing==0){
+      y &lt;- y + cur_val
+    }else if (facing ==90){
+      x &lt;- x + cur_val
+    }else if(facing == 180){
+      y &lt;- y - cur_val
+    }else if(facing==270){
+      x &lt;- x - cur_val
+    }
+  }
+  #message (paste(cur_com, cur_val, &quot; facing &quot;, facing, &quot; x=&quot;, x, &quot; y=&quot;, y))
+}
+  
+answer_d12p1 &lt;- sum(abs(x), abs(y))</code></pre>
+<p>The answer to <strong>Day 12 Part 1</strong> is 1,133</p>
+</div>
+<div id="day-12-part-2" class="section level3">
+<h3>Day 12: Part 2</h3>
+<p>Figure out where the navigation instructions actually lead. What is the Manhattan distance between that location and the ship’s starting position?</p>
+<p>Before you can give the destination to the captain, you realize that the actual action meanings were printed on the back of the instructions the whole time.</p>
+<p>Almost all of the actions indicate how to move a waypoint which is relative to the ship’s position:</p>
+<pre class="r"><code>x&lt;-as.numeric(0)
+y&lt;-as.numeric(0)
+wx &lt;-as.numeric(10)
+wy &lt;-as.numeric(1)
+
+#loop through each command
+for(i in 1:nrow(day12)){
+  cur_com &lt;- day12$command[i]
+  cur_val &lt;- day12$value[i]
+  
+  if(cur_com==&quot;N&quot;){
+    wy &lt;- wy + cur_val
+  }else if(cur_com==&quot;E&quot;){
+    wx &lt;- wx + cur_val  
+  }else if(cur_com==&quot;S&quot;){
+    wy &lt;- wy - cur_val
+  }else if (cur_com==&quot;W&quot;){
+    wx &lt;- wx - cur_val
+  }else if(cur_com %in% c(&quot;L&quot;,&quot;R&quot;)){
+    if ((cur_com==&quot;R&quot; &amp;&amp; cur_val==90)||(cur_com==&quot;L&quot; &amp;&amp; cur_val==270)){
+      temp&lt;- wx
+      wx&lt;- wy
+      wy&lt;- -temp
+    }else if((cur_com==&quot;R&quot; &amp;&amp; cur_val==270)||(cur_com==&quot;L&quot; &amp;&amp; cur_val==90)){
+      temp&lt;- wx
+      wx&lt;- -wy
+      wy&lt;- temp
+    }else if(cur_val==180){
+        #180
+        wx&lt;- -wx
+        wy&lt;- -wy
+      }
+  }else{
+    #move forward
+    #check neg &amp; neg
+    x &lt;- x + (cur_val * wx)
+    y &lt;- y + (cur_val * wy)
+  }
+  #message (paste(cur_com, cur_val, &quot; x=&quot;, x, &quot; y=&quot;, y, &quot; wx=&quot;, wx, &quot; wy=&quot;, wy))
+}
+  
+
+
+answer_d12p2 &lt;- sum(abs(x), abs(y))</code></pre>
+<p>The answer to <strong>Day 12 Part 2</strong> is 61,053</p>
 </div>
 </div>
 

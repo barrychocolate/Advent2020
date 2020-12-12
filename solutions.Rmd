@@ -194,7 +194,7 @@ Note participants don't always get the same starting dataset so you should repla
 #Remove previous day's data
 rm(list = ls())
 
-#dplyr for filter, numebrs for mod function
+#dplyr for filter, numbers for mod function
 library(dplyr, numbers)
 
 #Load the data that will be used for Part 1 & Part 2
@@ -1271,3 +1271,138 @@ answer_d11p2 <- sum(new_positions, na.rm = TRUE)
 ```
 
 The answer to **Day 11 Part 2** is `r format(answer_d11p2, nsmall=0, big.mark=",")`
+
+## Day 12: Rain Risk
+Your ferry made decent progress toward the island, but the storm came in faster than anyone expected. The ferry needs to take evasive actions!
+
+Unfortunately, the ship's navigation computer seems to be malfunctioning; rather than giving a route directly to safety, it produced extremely circuitous instructions. When the captain uses the PA system to ask if anyone can help, you quickly volunteer.
+
+The navigation instructions (your puzzle input) consists of a sequence of single-character actions paired with integer input values. After staring at them for a few minutes, you work out what they probably mean:
+.....
+
+[Full details....](https://adventofcode.com/2020/day/12)
+
+### Day 12: Load the data
+Note participants don't always get the same starting dataset so you should replace the day1.txt dataset with your own if you want to work out your answers.
+
+```{r warning=FALSE, message=FALSE, day12_load}
+#load the packages we need 
+library(stringr, numbers)
+
+#Remove previous day's data
+rm(list = ls())
+
+#Load the data that will be used for Part 1 & Part 2
+#The data can be  downloaded from https://adventofcode.com/2020/day/12/
+day12 <-read.table("data/day12.txt",col.names = c("raw") )
+
+#extract command and number from raw data
+day12$command <- str_sub(day12$raw,1,1)
+day12$value <- as.integer(str_sub(day12$raw,2,-1))
+
+```
+
+### Day 12: Part 1
+At the end of these instructions, the ship's Manhattan distance (sum of the absolute values of its east/west position and its north/south position) from its starting position is 17 + 8 = 25.
+
+Figure out where the navigation instructions lead. What is the Manhattan distance between that location and the ship's starting position?
+
+```{r day12_part1}
+x<-as.numeric(0)
+y<-as.numeric(0)
+facing<-as.numeric(90)
+
+#loop through each command
+for(i in 1:nrow(day12)){
+  cur_com <- day12$command[i]
+  cur_val <- day12$value[i]
+  
+  if(cur_com=="N"){
+    y <- y + cur_val
+  }else if(cur_com=="E"){
+    x <- x + cur_val  
+  }else if(cur_com=="S"){
+    y <- y - cur_val
+  }else if (cur_com=="W"){
+    x <- x - cur_val
+  }else if(cur_com=="L"){
+    facing <- numbers::mod((facing-cur_val), 360)
+  }else if(cur_com=="R"){
+    facing <- numbers::mod((facing+cur_val), 360)
+  }else{
+    #move forward
+    if (facing==0){
+      y <- y + cur_val
+    }else if (facing ==90){
+      x <- x + cur_val
+    }else if(facing == 180){
+      y <- y - cur_val
+    }else if(facing==270){
+      x <- x - cur_val
+    }
+  }
+  #message (paste(cur_com, cur_val, " facing ", facing, " x=", x, " y=", y))
+}
+  
+answer_d12p1 <- sum(abs(x), abs(y))
+```
+
+The answer to **Day 12 Part 1** is `r format(answer_d12p1, nsmall=0, big.mark=",")`
+
+### Day 12: Part 2
+Figure out where the navigation instructions actually lead. What is the Manhattan distance between that location and the ship's starting position?
+
+Before you can give the destination to the captain, you realize that the actual action meanings were printed on the back of the instructions the whole time.
+
+Almost all of the actions indicate how to move a waypoint which is relative to the ship's position:
+
+```{r day12_part2}
+
+
+x<-as.numeric(0)
+y<-as.numeric(0)
+wx <-as.numeric(10)
+wy <-as.numeric(1)
+
+#loop through each command
+for(i in 1:nrow(day12)){
+  cur_com <- day12$command[i]
+  cur_val <- day12$value[i]
+  
+  if(cur_com=="N"){
+    wy <- wy + cur_val
+  }else if(cur_com=="E"){
+    wx <- wx + cur_val  
+  }else if(cur_com=="S"){
+    wy <- wy - cur_val
+  }else if (cur_com=="W"){
+    wx <- wx - cur_val
+  }else if(cur_com %in% c("L","R")){
+    if ((cur_com=="R" && cur_val==90)||(cur_com=="L" && cur_val==270)){
+      temp<- wx
+      wx<- wy
+      wy<- -temp
+    }else if((cur_com=="R" && cur_val==270)||(cur_com=="L" && cur_val==90)){
+      temp<- wx
+      wx<- -wy
+      wy<- temp
+    }else if(cur_val==180){
+        #180
+        wx<- -wx
+        wy<- -wy
+      }
+  }else{
+    #move forward
+    #check neg & neg
+    x <- x + (cur_val * wx)
+    y <- y + (cur_val * wy)
+  }
+  #message (paste(cur_com, cur_val, " x=", x, " y=", y, " wx=", wx, " wy=", wy))
+}
+  
+
+
+answer_d12p2 <- sum(abs(x), abs(y))
+```
+
+The answer to **Day 12 Part 2** is `r format(answer_d12p2, nsmall=0, big.mark=",")`
