@@ -1406,3 +1406,160 @@ answer_d12p2 <- sum(abs(x), abs(y))
 ```
 
 The answer to **Day 12 Part 2** is `r format(answer_d12p2, nsmall=0, big.mark=",")`
+
+## Day 13: Shuttle Search
+Your ferry can make it safely to a nearby port, but it won't get much further. When you call to book another ship, you discover that no ships embark from that port to your vacation island. You'll need to get from the port to the nearest airport.
+
+Fortunately, a shuttle bus service is available to bring you from the sea port to the airport! Each bus has an ID number that also indicates how often the bus leaves for the airport....
+
+[Full details....](https://adventofcode.com/2020/day/13)
+
+### Day 13: Load the data
+Note participants don't always get the same starting dataset so you should replace the day1.txt dataset with your own if you want to work out your answers.
+
+```{r warning=FALSE, message=FALSE, day13_load}
+#load the packages we need 
+library(numbers)
+
+#Remove previous day's data
+rm(list = ls())
+
+#Load the data that will be used for Part 1 & Part 2
+#The data can be  downloaded from https://adventofcode.com/2020/day/13/
+day13 <-readLines("data/day13.txt")
+
+
+```
+
+### Day 13: Part 1
+What is the ID of the earliest bus you can take to the airport multiplied by the number of minutes you'll need to wait for that bus?
+
+```{r day13_part1}
+starttime<- as.integer(day13[1])
+buses<-unlist(strsplit(day13[2],","))
+buses<-as.integer(buses[buses!="x"])
+
+nextbus <- function(bus, stime){
+  if (numbers::mod(stime, bus)==0){
+    #no wait
+    return(stime)
+  }else{
+    return((floor(stime/bus)+1)*bus)
+  }
+}
+
+#get next bus from start time
+nxt <- sapply(buses, nextbus, stime=starttime)
+
+answer_d13p1 <- ((min(nxt)-starttime)*buses[which.min(nxt)])
+```
+
+The answer to **Day 13 Part 1** is `r format(answer_d13p1, nsmall=0, big.mark=",")`
+
+### Day 13: Part 2
+The shuttle company is running a contest: one gold coin for anyone that can find the earliest timestamp such that the first bus ID departs at that time and each subsequent listed bus ID departs at that subsequent minute. (The first line in your input is no longer relevant.)...
+
+...What is the earliest timestamp such that all of the listed bus IDs depart at offsets matching their positions in the list?
+
+```{r day13_part2}
+buses_temp<-unlist(strsplit(day13[2],","))
+buses<-as.integer(buses_temp[buses_temp!="x"])
+
+start_times <- vector("integer", length = length(buses))
+
+#calculate start times
+#subtracting the minute offset so that we are looking for busess that all have the same value
+for (i in 1:length(buses)){
+    start_times[i]<- -(match(buses[i], buses_temp)-1)
+}
+
+#setup initial values
+bus29 <- c(0)
+bus41 <- c(-19)
+bus577 <- c(-29)
+bus13 <- c(-42)
+bus17 <- c(-43)
+bus19 <- c(-48)
+bus23 <- c(-52)
+bus601 <- c(-60)
+bus37 <- c(-97)
+
+tmax <- 1000000000
+tmax_interval <- 1000000000
+answer_d13p2 <- as.double()
+
+#brute force method works but is hugely inefficient for this combination of buses
+#commented out as it takes so long to run
+
+# while(length(answer_d13p2)==0){
+#   bus29 <- seq(bus29[length(bus29)], tmax, by=29)
+#   bus41 <- seq(bus41[length(bus41)], tmax, by=41)
+#   bus577 <- seq(bus577[length(bus577)], tmax, by=577)
+#   bus13 <- seq(bus13[length(bus13)], tmax, by=13)
+#   bus17 <- seq(bus17[length(bus17)], tmax, by=17)
+#   bus19 <- seq(bus19[length(bus19)], tmax, by=19)
+#   bus23 <- seq(bus23[length(bus23)], tmax, by=23)
+#   bus601 <- seq(bus601[length(bus601)], tmax, by=601)
+#   bus37 <- seq(bus37[length(bus37)], tmax, by=37)
+# 
+#   answer_d13p2 <- Reduce(intersect, list(bus29, bus41, bus577, bus13, bus17, bus19, bus23, bus601, bus37))
+#   tmax<- tmax + tmax_interval
+#   message (paste("tmax = ", tmax))
+# }
+
+#answer_d13p2 <- start_times[1]
+answer_d13p2 <-780601154795940
+
+```
+
+The answer to **Day 13 Part 2** is `r format(answer_d13p2, nsmall=0, big.mark=",")`
+
+### Day 13: Part 2 - Better solution
+I found AdroMine's solution while exploring more efficient ways of solving part 2.  It uses Chinese Remainder theorem to quickly solve the problem.  Much more efficient than my approach.
+
+Check out [AdroMine's solution on Github](https://github.com/AdroMine/AdventOfCode2020/blob/main/Day13/solution.R)
+
+```{r include=FALSE, EVAL = FALSE}
+
+input <- readLines("data/day13.txt")
+
+target <- as.numeric(input[1])
+buses <- unlist(strsplit(input[2], ","))
+
+# Part 1
+bus_t <- as.numeric(buses[buses!="x"])
+wait_time <- ((target %/% bus_t + 1) * bus_t) - target   # %/% is integer division in R
+
+idx <- which.min(wait_time)
+wait_time[idx] * bus_t[idx]
+
+
+# for higher precision, wasted too much time because of 
+# precision error
+library(Rmpfr)
+
+# Part 2
+part2 <- function(buses){
+    dept <- which(buses!="x") - 1
+    buses <- as.double(buses[buses!="x"])
+    
+    .N <- function(.) mpfr(., precBits = 200)    
+    N <- .N(prod(buses))
+    Y <- N/buses
+    rem <- -dept # can also use -dept %% buses
+    inv <- rep(NA, length(buses))
+    
+    # inverse modulo
+    for(i in 1:length(buses)){
+        # n *k %% m equivalent to [(n %% m)*(k%%m)] %% m 
+        m <- Y[i] %% buses[i]
+        k <- 1:(buses[i]-1)
+        remainder <- (m*k) %% buses[i]
+        inv[i] <- which(remainder == 1)
+    }
+    sum(Y * rem * inv) %% N
+}
+part2(buses)
+
+```
+

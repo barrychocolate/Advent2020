@@ -2783,6 +2783,105 @@ answer_d12p2 &lt;- sum(abs(x), abs(y))</code></pre>
 <p>The answer to <strong>Day 12 Part 2</strong> is 61,053</p>
 </div>
 </div>
+<div id="day-13-shuttle-search" class="section level2">
+<h2>Day 13: Shuttle Search</h2>
+<p>Your ferry can make it safely to a nearby port, but it won’t get much further. When you call to book another ship, you discover that no ships embark from that port to your vacation island. You’ll need to get from the port to the nearest airport.</p>
+<p>Fortunately, a shuttle bus service is available to bring you from the sea port to the airport! Each bus has an ID number that also indicates how often the bus leaves for the airport….</p>
+<p><a href="https://adventofcode.com/2020/day/13">Full details….</a></p>
+<div id="day-13-load-the-data" class="section level3">
+<h3>Day 13: Load the data</h3>
+<p>Note participants don’t always get the same starting dataset so you should replace the day1.txt dataset with your own if you want to work out your answers.</p>
+<pre class="r"><code>#load the packages we need 
+library(numbers)
+
+#Remove previous day&#39;s data
+rm(list = ls())
+
+#Load the data that will be used for Part 1 &amp; Part 2
+#The data can be  downloaded from https://adventofcode.com/2020/day/13/
+day13 &lt;-readLines(&quot;data/day13.txt&quot;)</code></pre>
+</div>
+<div id="day-13-part-1" class="section level3">
+<h3>Day 13: Part 1</h3>
+<p>What is the ID of the earliest bus you can take to the airport multiplied by the number of minutes you’ll need to wait for that bus?</p>
+<pre class="r"><code>starttime&lt;- as.integer(day13[1])
+buses&lt;-unlist(strsplit(day13[2],&quot;,&quot;))
+buses&lt;-as.integer(buses[buses!=&quot;x&quot;])
+
+nextbus &lt;- function(bus, stime){
+  if (numbers::mod(stime, bus)==0){
+    #no wait
+    return(stime)
+  }else{
+    return((floor(stime/bus)+1)*bus)
+  }
+}
+
+#get next bus from start time
+nxt &lt;- sapply(buses, nextbus, stime=starttime)
+
+answer_d13p1 &lt;- ((min(nxt)-starttime)*buses[which.min(nxt)])</code></pre>
+<p>The answer to <strong>Day 13 Part 1</strong> is 174</p>
+</div>
+<div id="day-13-part-2" class="section level3">
+<h3>Day 13: Part 2</h3>
+<p>The shuttle company is running a contest: one gold coin for anyone that can find the earliest timestamp such that the first bus ID departs at that time and each subsequent listed bus ID departs at that subsequent minute. (The first line in your input is no longer relevant.)…</p>
+<p>…What is the earliest timestamp such that all of the listed bus IDs depart at offsets matching their positions in the list?</p>
+<pre class="r"><code>buses_temp&lt;-unlist(strsplit(day13[2],&quot;,&quot;))
+buses&lt;-as.integer(buses_temp[buses_temp!=&quot;x&quot;])
+
+start_times &lt;- vector(&quot;integer&quot;, length = length(buses))
+
+#calculate start times
+#subtracting the minute offset so that we are looking for busess that all have the same value
+for (i in 1:length(buses)){
+    start_times[i]&lt;- -(match(buses[i], buses_temp)-1)
+}
+
+#setup initial values
+bus29 &lt;- c(0)
+bus41 &lt;- c(-19)
+bus577 &lt;- c(-29)
+bus13 &lt;- c(-42)
+bus17 &lt;- c(-43)
+bus19 &lt;- c(-48)
+bus23 &lt;- c(-52)
+bus601 &lt;- c(-60)
+bus37 &lt;- c(-97)
+
+tmax &lt;- 1000000000
+tmax_interval &lt;- 1000000000
+answer_d13p2 &lt;- as.double()
+
+#brute force method works but is hugely inefficient for this combination of buses
+#commented out as it takes so long to run
+
+# while(length(answer_d13p2)==0){
+#   bus29 &lt;- seq(bus29[length(bus29)], tmax, by=29)
+#   bus41 &lt;- seq(bus41[length(bus41)], tmax, by=41)
+#   bus577 &lt;- seq(bus577[length(bus577)], tmax, by=577)
+#   bus13 &lt;- seq(bus13[length(bus13)], tmax, by=13)
+#   bus17 &lt;- seq(bus17[length(bus17)], tmax, by=17)
+#   bus19 &lt;- seq(bus19[length(bus19)], tmax, by=19)
+#   bus23 &lt;- seq(bus23[length(bus23)], tmax, by=23)
+#   bus601 &lt;- seq(bus601[length(bus601)], tmax, by=601)
+#   bus37 &lt;- seq(bus37[length(bus37)], tmax, by=37)
+# 
+#   answer_d13p2 &lt;- Reduce(intersect, list(bus29, bus41, bus577, bus13, bus17, bus19, bus23, bus601, bus37))
+#   tmax&lt;- tmax + tmax_interval
+#   message (paste(&quot;tmax = &quot;, tmax))
+# }
+
+#answer_d13p2 &lt;- start_times[1]
+answer_d13p2 &lt;-780601154795940</code></pre>
+<p>The answer to <strong>Day 13 Part 2</strong> is 780,601,154,795,940</p>
+</div>
+<div id="day-13-part-2---better-solution" class="section level3">
+<h3>Day 13: Part 2 - Better solution</h3>
+<p>I found AdroMine’s solution while exploring more efficient ways of solving part 2. It uses Chinese Remainder theorem to quickly solve the problem. Much more efficient than my approach.</p>
+<p>Check out <a href="https://github.com/AdroMine/AdventOfCode2020/blob/main/Day13/solution.R">AdroMine’s solution on Github</a></p>
+</div>
+</div>
 
 
 
